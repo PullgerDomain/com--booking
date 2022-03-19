@@ -1,60 +1,23 @@
 #import undetected_chromedriver.v2 as uc
-from MetaverseFootPrint.com.booking.www.pages import hotels as bookingHotelsFootPrint
-from MetaverseFootPrint.com.booking.www.pages import reviews as bookingReviewsFootPrint
-from pcardext import df
-from websocket import _url
+from pyPullgerFootPrint.com.booking.www.pages import hotels as bookingHotelsFootPrint
+from pyPullgerFootPrint.com.booking.www.pages import reviews as bookingReviewsFootPrint
+from squirrels import SquairrelsCore
+#from pcardext import df
+#from websocket import _url
 
 class CriticalErrorInitialization(Exception): pass
 
-class Squirrel:
-    genus = None
-    type = None
-    driver = None
-    
-    
-    def __init__(self, inGenus, inType = None):
-        self.genus = inGenus
-        self.type = inType
-        
-    def initialize(self):
-        if self.genus == 'selenium':
-            import undetected_chromedriver as uc
-            
-            chrome_options = uc.ChromeOptions()
-    
-            #chrome_options.add_argument("--headless")
-            chrome_options.add_argument("--disable-extensions")
-            chrome_options.add_argument("--disable-popup-blocking")
-            chrome_options.add_argument("--profile-directory=Default")
-            chrome_options.add_argument("--ignore-certificate-errors")
-            chrome_options.add_argument("--disable-plugins-discovery")
-            chrome_options.add_argument("--incognito")
-            chrome_options.add_argument("--user_agent=DN")
-            chrome_options.add_argument('--no-first-run')
-            chrome_options.add_argument('--no-service-autorun')
-            chrome_options.add_argument('--password-store=basic')
-            
-            try:
-                self.driver = uc.Chrome(options=chrome_options)
-            except Exception as Err:
-                print("ERROR ERROR ERROR")
-                raise CriticalErrorInitialization(Err)
-            
-    def get(self, url):
-        self.driver.execute_script('window.location.href = "' + url + '"');
-        
-
 class Phantom:
     languageWeb = None;
-    driver = None;
+    #driver = None;
     squirrel = None;
     
     def __init__(self, idLanguageWeb):
         self.languageWeb = LanguageWeb(idLanguageWeb);
-        
-        squirrel = Squirrel('selenium')
-        squirrel.initialize()
-        squirrel.get('https://www.booking.com/content/about.' + self.languageWeb.id + '.html')
+
+        self.squirrel = SquairrelsCore.Squirrel('selenium')
+        self.squirrel.initialize()
+        self.squirrel.get('https://www.booking.com/content/about.' + self.languageWeb.id + '.html')
         
         '''
         chrome_options = uc.ChromeOptions()
@@ -79,7 +42,7 @@ class Phantom:
         #self.driver.get('https://www.booking.com/content/about.' + self.languageWeb.id + '.html');
     
     def close(self):
-        self.driver.close();
+        self.squirrel.close();
         
     def setLanguage(self, inLanguage):
         inLanguageType = type(inLanguage);
@@ -94,28 +57,29 @@ class Phantom:
             return Language(idName);
     
     def getHotelByIDName(self, country, idHotelName):
-        return _Hotel(self.driver, country, self.languageWeb, idHotelName)
+        return _Hotel(self.squirrel, country, self.languageWeb, idHotelName)
     
 class _Hotel:
     id = None;
     country = None;
     languageWeb = None;
     reviewCount = None;
-    driver = None;
+    squirrel = None;
     
-    def __init__(self, driver, country, languageWeb, idHotelName):
+    def __init__(self, squirrel, country, languageWeb, idHotelName):
         self.country = country;
         self.languageWeb = languageWeb;
         self.id = idHotelName;
-        self.driver = driver;
+        self.squirrel = squirrel;
         
         url = 'https://www.booking.com/hotel/' + country.id + '/' + idHotelName + '.' + languageWeb.id + '.html';
-        self.driver.execute_script('window.location.href = "' + url + '"');
+        #self.driver.execute_script('window.location.href = "' + url + '"');
         #driver.get('https://www.booking.com/hotel/' + country.id + '/' + idHotelName + '.' + languageWeb.id + '.html');
-        self.reviewCount = bookingHotelsFootPrint.getReviewCount(driver);
+        self.squirrel.get(url)
+        self.reviewCount = bookingHotelsFootPrint.getReviewCount(self.squirrel);
 
     def fetchReviews(self):
-        return FetchReview(self.driver, self); 
+        return FetchReview(self.squirrel, self);
 
 class Review:
     hotel = None
@@ -128,19 +92,19 @@ class Review:
     review_bad = None;
     review_bad_lang = None;
     
-    _driver = None;
+    _squirrel = None;
     _url = None;
     _listOfReviews = None;
     
-    def __init__(self, driver, hotel):
-        self._driver = driver;
-        self._url = self._driver.current_url;
+    def __init__(self, squirrel, hotel):
+        self._squirrel = squirrel;
+        self._url = self._squirrel.current_url;
         self.hotel = hotel;
     
     def getReviewByCountOnPage(self, countOnPage):
-        if self._listOfReviews == None or self._url != self._driver.current_url:
-            self._listOfReviews = bookingReviewsFootPrint.getListOfReviews(self._driver)
-            self._url = self._driver.current_url
+        if self._listOfReviews == None or self._url != self._squirrel.current_url:
+            self._listOfReviews = bookingReviewsFootPrint.getListOfReviews(self._squirrel)
+            self._url = self._squirrel.current_url
         
         if self._listOfReviews == None:
             return None;
@@ -156,28 +120,28 @@ class Review:
             self.review_good_lang = Language(elReviews["review_good_lang"]);
             self.review_bad = elReviews["review_bad"];
             self.review_bad_lang = Language(elReviews["review_bad_lang"]);
-            
-            
+
             return True;  
 
 class FetchReview:
-    driver = None;
+    squirrel = None;
     curentNum = None;
     el = None;
     _curentNumOnPagination = None;
     _countReviewOnCurentPagination = None;
     
-    def __new__(cls, driver, hotel):
-        cls.driver = driver;
+    def __new__(cls, squirrel, hotel):
+        cls.squirrel = squirrel;
         
         url = 'https://www.booking.com/reviewlist.' + hotel.languageWeb.id + '.html?cc1=' + hotel.country.id + '&pagename=' + hotel.id + ';sort=f_recent_desc';
-        cls.driver.execute_script('window.location.href = "' + url + '"');
+        #cls.driver.execute_script('window.location.href = "' + url + '"');
         #cls.driver.get('https://www.booking.com/reviewlist.' + hotel.languageWeb.id + '.html?cc1=' + hotel.country.id + '&pagename=' + hotel.id + ';sort=f_recent_desc');
-        
-        cls._countReviewOnCurentPagination = bookingReviewsFootPrint.getCountOfReviewsElements(cls.driver);
+        cls.squirrel.get(url);
+
+        cls._countReviewOnCurentPagination = bookingReviewsFootPrint.getCountOfReviewsElements(cls.squirrel);
         
         if cls._countReviewOnCurentPagination != 0:
-            cls.el = Review(cls.driver, hotel);
+            cls.el = Review(cls.squirrel, hotel);
         
         if cls.el == None:
             return None;
@@ -197,8 +161,8 @@ class FetchReview:
             self._curentNumOnPagination += 1;
             if (self._curentNumOnPagination + 1) > self._countReviewOnCurentPagination:
                 self._curentNumOnPagination = 0;
-                if bookingReviewsFootPrint.goToNextPaginationPage(self.driver) == True:
-                    self._countReviewOnCurentPagination = bookingReviewsFootPrint.getCountOfReviewsElements(self.driver);
+                if bookingReviewsFootPrint.goToNextPaginationPage(self.squirrel) == True:
+                    self._countReviewOnCurentPagination = bookingReviewsFootPrint.getCountOfReviewsElements(self.squirrel);
                 else:
                     self.curentNum -= 1
                     return False;
