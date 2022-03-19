@@ -1,7 +1,7 @@
 #import undetected_chromedriver.v2 as uc
 from pyPullgerFootPrint.com.booking.www.pages import hotels as bookingHotelsFootPrint
 from pyPullgerFootPrint.com.booking.www.pages import reviews as bookingReviewsFootPrint
-from squirrels import SquairrelsCore
+from squirrel import SquairrelCore
 #from pcardext import df
 #from websocket import _url
 
@@ -15,7 +15,7 @@ class Phantom:
     def __init__(self, idLanguageWeb):
         self.languageWeb = LanguageWeb(idLanguageWeb);
 
-        self.squirrel = SquairrelsCore.Squirrel('selenium')
+        self.squirrel = SquairrelCore.Squirrel('selenium')
         self.squirrel.initialize()
         self.squirrel.get('https://www.booking.com/content/about.' + self.languageWeb.id + '.html')
         
